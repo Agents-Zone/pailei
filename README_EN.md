@@ -88,4 +88,4 @@ Inspired by [Vibe-Trading](https://github.com/HKUDS), TradingAgents, and ai-hedg
 
 ## License
 
-MIT
+GPL-3.0
