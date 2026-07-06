@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PaiLei 排雷 · 真 Agent MVP</title>
+<link rel="stylesheet" href="/static/style.css?v=3">
+</head>
+<body>
+
+<!-- 屏幕 1: 输入页 -->
+<section id="screen-input" class="screen screen-dark">
+  <div class="brand">
+    <span class="brand-mark">⚡</span>
+    <span class="brand-name">PaiLei 排雷</span>
+    <span class="brand-tag">真 Agent · akshare 实时数据</span>
+  </div>
+  <div class="input-card">
+    <h1 class="tagline">
+      输入股票代码
+      <span class="tagline-sub">Agent 自动拉财报 · 跑规则 · 出红旗报告</span>
+    </h1>
+    <label class="field-label" for="code-input">A 股股票代码</label>
+    <div class="input-row">
+      <input id="code-input" type="text" value="600518" autocomplete="off" spellcheck="false" inputmode="numeric">
+      <button id="start-btn">开始排雷 →</button>
+    </div>
+    <div class="case-hint">
+      <span>试试:</span>
+      <button class="case-pick" data-code="600518">康美药业 600518</button>
+      <button class="case-pick" data-code="600519">贵州茅台 600519</button>
+      <button class="case-pick" data-code="000651">格力电器 000651</button>
+    </div>
+  </div>
+  <div class="meta-foot">数据源: akshare(东财) · 公开披露 · 不构成投资建议</div>
+</section>
+
+<!-- 屏幕 2: 报告页(Card 流式) -->
+<section id="screen-report" class="screen screen-light hidden">
+  <header class="report-header">
+    <div class="report-brand" id="report-brand">PaiLei 排雷 · 正在分析…</div>
+    <button id="back-btn" class="back-btn">← 重新排雷</button>
+  </header>
+  <div id="cards" class="cards"></div>
+</section>
+
+<script src="/static/app.js?v=3"></script>
+</body>
+</html>
