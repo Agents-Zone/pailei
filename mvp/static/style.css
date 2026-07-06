@@ -70,6 +70,42 @@ body { min-height: 100vh; }
 .layer-rule .layer-tag { background: var(--warning-bg); color: var(--warning); }
 .layer-summary .layer-tag { background: #eef; color: #3a3a6f; }
 .layer-analysis .layer-tag { background: var(--ai-bg); color: var(--ai); }
+.layer-deep .layer-tag { background: #e6f4ec; color: #1a6b4d; }
+.card.layer-deep { border-left-color: #1a6b4d; }
+.card.layer-deep.flag-done { border-left-color: #1a6b4d; }
+.deep-hint-card .deep-hint-msg { font-size: 14px; color: var(--ink-dim); margin-bottom: 14px; line-height: 1.75; }
+.deep-hint-card .deep-hint-msg b { color: var(--ink); }
+.deep-btn { background: #1a6b4d; color: #fff; border: none; border-radius: 10px; padding: 12px 28px; font-size: 15px; font-weight: 700; cursor: pointer; transition: background .2s; }
+.deep-btn:hover { background: #155740; }
+.deep-year-row { display: flex; gap: 10px; align-items: center; margin-bottom: 8px; }
+.deep-year-row label { font-size: 13px; color: var(--ink-dim); }
+.deep-year-row input { width: 80px; padding: 9px 12px; border: 1px solid var(--rule); border-radius: 8px; font-family: var(--mono); font-size: 15px; }
+.deep-hint-tip { font-size: 12px; color: var(--ink-faint); margin-top: 4px; }
+.deep-prog { font-family: var(--mono); font-size: 13px; color: var(--ink-dim); padding: 6px 0; }
+.deep-result { font-size: 14px; color: var(--ink); line-height: 1.75; padding: 6px 0; }
+.deep-sub { font-size: 12px; color: var(--ink-faint); margin: 12px 0 6px; letter-spacing: 0.3px; font-weight: 600; }
+.deep-sub.warn { color: var(--warning); }
+.deep-sub.ok { color: var(--ok); }
+.deep-row { font-size: 13px; padding: 6px 0; border-bottom: 1px solid var(--rule-soft); display: flex; gap: 10px; align-items: baseline; }
+.deep-row .dr-name { font-weight: 600; min-width: 120px; }
+.deep-row .dr-flag { font-size: 12px; }
+.deep-row .dr-sum { color: var(--ink-dim); flex: 1; }
+.deep-row.hit { color: var(--critical); }
+.deep-row.cross { color: var(--warning); font-family: var(--mono); font-size: 12px; }
+.finding { background: var(--paper); border: 1px solid var(--rule); border-left: 3px solid var(--ink-faint); border-radius: 8px; padding: 12px 14px; margin: 10px 0; }
+.finding.critical { border-left-color: var(--critical); }
+.finding.warning { border-left-color: var(--warning); }
+.finding.hit { background: var(--critical-bg); }
+.finding .f-head { display: flex; gap: 10px; align-items: center; margin-bottom: 6px; }
+.finding .f-sev { font-size: 10px; font-weight: 700; padding: 2px 7px; border-radius: 4px; background: var(--ink-faint); color: #fff; }
+.finding .f-sev.critical { background: var(--critical); }
+.finding .f-sev.warning { background: var(--warning); }
+.finding .f-sev.info { background: var(--ink-faint); }
+.finding .f-hit { font-size: 12px; margin-left: auto; }
+.finding .f-sum { font-size: 13.5px; color: var(--ink); line-height: 1.65; }
+.finding .f-ev { margin-top: 8px; font-size: 12px; color: var(--ink-dim); }
+.finding .f-ev summary { cursor: pointer; color: var(--info); }
+.finding .f-ev pre { margin-top: 6px; background: #fff; padding: 8px 10px; border-radius: 6px; border: 1px solid var(--rule); white-space: pre-wrap; font-size: 12px; line-height: 1.6; }
 .card-title { flex: 1; font-size: 17px; font-weight: 700; min-width: 0; }
 .card-status { font-size: 12px; color: var(--ink-faint); display: flex; align-items: center; gap: 6px; }
 .spinner { width: 12px; height: 12px; border: 2px solid var(--rule); border-top-color: var(--info); border-radius: 50%; animation: spin 0.8s linear infinite; }

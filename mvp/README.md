@@ -5,14 +5,14 @@
 ## 本地启动（3 步）
 
 ```bash
-cd mvp
+cd campaigns/opensource-fin-agent/mvp
 
 # 1. 装依赖（venv 已建好；换机器则先 python3 -m venv .venv）
 .venv/bin/pip install -r requirements.txt
 
-# 2. 配大模型 key（任选一家 OpenAI 兼容端点，填你自己的 key）
+# 2. 配大模型 key（仓库私有，.env.example 已预置硅基流动共享测试 key，直接复制即可）
 cp .env.example .env
-#   编辑 .env 填 PAILEI_API_BASE / PAILEI_API_KEY / PAILEI_MODEL（.env.example 有各家示例）
+#   默认 SiliconFlow Qwen3-32B（同事无需自己申请 key）。换自己的 key 再编辑 .env。
 #   不配也能跑，只是最后「Agent 综合分析」卡显示降级提示。
 
 # 3. 起服务
@@ -101,8 +101,8 @@ mvp/
 
 ## 路线图
 
-这是**结构化数据版（Tier 1）**：akshare 拉三大报表 + 6 条规则 + 大模型综合分析。
+- **Tier 1（已完成）**：akshare 结构化初分 + 6 规则 + 综合分析，秒级
+- **Tier 2（已完成）**：年报 PDF → LLM wiki 沉淀（巨潮 + markitdown + 章节切分）+ Agent 深度排雷（数字层交叉 + 附注层 5 规则 LLM 深读）
+- **下一步**：findings 标注到 wiki 原文（点跳章节高亮）、更多暴雷案例回测、规则可插拔扩展
 
-下一步（**Tier 2**）接入年报 PDF 附注解读——关联交易、会计政策变更、或有负债这些规则读不了的信号，藏在年报附注的非结构化文本里，那才是排雷工具真正的差异化（也是规则 6「关联交易」目前标「数据不可得」的原因）。
-
-欢迎 issue / PR 补充红旗规则，规则集是可插拔的（见 `app/rules.py`）。
+欢迎 issue / PR 补充红旗规则，规则集在 `app/rules.py` + `app/wiki_agent.py`。

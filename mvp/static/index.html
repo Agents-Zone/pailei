@@ -4,7 +4,17 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>PaiLei 排雷 · 真 Agent MVP</title>
-<link rel="stylesheet" href="/static/style.css?v=3">
+<link rel="stylesheet" href="/static/style.css?v=5">
+<style>
+  .mode-cards { display:flex; gap:14px; margin-top:28px; }
+  .mode-card { flex:1; display:flex; flex-direction:column; align-items:center; gap:5px; padding:18px 16px; border:1px solid rgba(255,255,255,0.14); border-radius:14px; background:rgba(255,255,255,0.03); color:#e6edf3; text-decoration:none; transition:border-color .2s, background .2s; position:relative; }
+  .mode-card:hover { border-color:#ff4d4f; background:rgba(255,77,79,0.06); transform:translateY(-1px); }
+  .mode-card.active { border-color:rgba(255,255,255,0.28); cursor:default; }
+  .mode-card .m-icon { font-size:28px; }
+  .mode-card .m-title { font-size:16px; font-weight:700; }
+  .mode-card .m-desc { font-size:12px; color:#8b949e; text-align:center; }
+  .mode-card .m-badge { position:absolute; top:8px; right:10px; font-size:10px; padding:2px 7px; background:#ff4d4f; color:#fff; border-radius:999px; }
+</style>
 </head>
 <body>
 
@@ -31,6 +41,19 @@
       <button class="case-pick" data-code="600519">贵州茅台 600519</button>
       <button class="case-pick" data-code="000651">格力电器 000651</button>
     </div>
+    <div class="mode-cards">
+      <div class="mode-card active">
+        <div class="m-badge">当前</div>
+        <div class="m-icon">⚡</div>
+        <div class="m-title">快速排雷</div>
+        <div class="m-desc">akshare 实时 · 秒级 · 全市场初筛</div>
+      </div>
+      <a href="/wiki" class="mode-card">
+        <div class="m-icon">📄</div>
+        <div class="m-title">PDF Wiki</div>
+        <div class="m-desc">年报全文沉淀 · 附注深读 · 可离线</div>
+      </a>
+    </div>
   </div>
   <div class="meta-foot">数据源: akshare(东财) · 公开披露 · 不构成投资建议</div>
 </section>
@@ -44,6 +67,6 @@
   <div id="cards" class="cards"></div>
 </section>
 
-<script src="/static/app.js?v=3"></script>
+<script src="/static/app.js?v=7"></script>
 </body>
 </html>

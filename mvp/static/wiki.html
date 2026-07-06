@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PaiLei · PDF Wiki</title>
+<link rel="stylesheet" href="/static/style.css?v=4">
+<style>
+  body { background: var(--paper); }
+  .wiki-prepare { max-width: 720px; margin: 56px auto; padding: 0 24px; }
+  .wiki-prepare h1 { font-size: 30px; margin-bottom: 6px; letter-spacing: -0.3px; }
+  .wiki-prepare .sub { color: var(--ink-dim); margin-bottom: 28px; font-size: 15px; }
+  .wiki-form { display: flex; gap: 12px; margin-bottom: 16px; flex-wrap: wrap; }
+  .wiki-form input { background: #fff; padding: 13px 16px; border: 1px solid var(--rule); border-radius: 10px; font-size: 16px; font-family: var(--mono); outline: none; }
+  .wiki-form input:focus { border-color: var(--accent); }
+  .wiki-form input#code { width: 150px; } .wiki-form input#year { width: 110px; }
+  .wiki-form button { background: var(--accent); color: #fff; border: none; border-radius: 10px; padding: 0 26px; font-size: 15px; font-weight: 700; cursor: pointer; }
+  .wiki-form button:hover { background: #ff3334; }
+  .wiki-progress { background: #fff; border: 1px solid var(--rule); border-radius: 10px; padding: 14px 18px; min-height: 22px; font-size: 14px; color: var(--ink-dim); }
+  .wiki-progress .err { color: var(--critical); font-weight: 600; }
+  .steps { display:flex; margin-bottom:14px; }
+  .step { flex:1; display:flex; align-items:center; gap:8px; padding:11px 12px; border:1px solid var(--rule); background:#fff; font-size:13px; color:var(--ink-dim); }
+  .step + .step { border-left:none; }
+  .step .step-icon { font-size:15px; width:18px; text-align:center; }
+  .step .step-name { font-weight:600; }
+  .step .step-detail { font-size:11px; color:var(--ink-faint); margin-left:auto; max-width:50%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .step.active { color:var(--accent); border-color:var(--accent); background:var(--critical-bg); }
+  .step.done { color:var(--ok); border-color:var(--ok); background:var(--ok-bg); }
+  .progress-bar-wrap { height:6px; background:var(--rule); border-radius:3px; overflow:hidden; margin-bottom:10px; }
+  .progress-bar { height:100%; width:0; background:var(--accent); transition:width .2s; }
+  .progress-msg { font-size:13px; color:var(--ink-dim); min-height:18px; }
+  .wiki-list { max-width:720px; margin:32px auto 64px; padding:0 24px; }
+  .wiki-list h3 { font-size:15px; color:var(--ink-dim); margin-bottom:14px; font-weight:600; }
+  .wiki-cards { display:grid; grid-template-columns:repeat(auto-fill,minmax(210px,1fr)); gap:12px; }
+  .wiki-card { background:#fff; border:1px solid var(--rule); border-radius:10px; padding:14px 16px; cursor:pointer; transition:border-color .2s, transform .12s, box-shadow .2s; }
+  .wiki-card:hover { border-color:var(--accent); transform:translateY(-2px); box-shadow:0 4px 12px rgba(0,0,0,0.06); }
+  .wiki-card .wc-company { font-size:15px; font-weight:700; color:var(--ink); }
+  .wiki-card .wc-meta { font-size:12px; color:var(--ink-faint); margin-top:4px; font-family:var(--mono); }
+  .wiki-card .wc-stat { font-size:11px; color:var(--ink-dim); margin-top:6px; }
+  .wiki-empty { color:var(--ink-faint); font-size:13px; grid-column:1/-1; }
+  .wiki-top-actions { position: fixed; top:16px; right:24px; z-index:20; display:flex; gap:8px; }
+  .wiki-back { position: fixed; top: 16px; right: 24px; z-index: 20; }
+  .wiki-view { display: none; }
+  .wiki-view.ready { display: block; }
+  .wiki-sidebar { position: fixed; top: 0; left: 0; bottom: 0; width: 230px; background: #1f2328; color: #e6e6e6; padding: 24px 14px; overflow-y: auto; z-index: 10; }
+  .wiki-sidebar h3 { font-size: 12px; color: #9aa1ab; margin: 18px 12px 6px; letter-spacing: 0.5px; }
+  .wiki-sidebar a { display: block; color: #c0c4ca; padding: 8px 12px; border-radius: 6px; font-size: 13.5px; cursor: pointer; }
+  .wiki-sidebar a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+  .wiki-sidebar a.active { background: var(--accent); color: #fff; }
+  .wiki-content { margin-left: 230px; padding: 40px 48px 80px; max-width: 920px; }
+  .wiki-content .doc-meta { color: var(--ink-dim); font-size: 13px; margin-bottom: 24px; padding-bottom: 14px; border-bottom: 1px solid var(--rule); }
+  .wiki-content .doc-meta strong { color: var(--ink); font-size: 17px; }
+  .wiki-content .md { font-size: 14.5px; line-height: 1.85; color: var(--ink); }
+  .wiki-content .md h1 { font-size: 22px; margin: 28px 0 12px; }
+  .wiki-content .md h2 { font-size: 18px; margin: 22px 0 10px; }
+  .wiki-content .md h3 { font-size: 16px; margin: 18px 0 8px; }
+  .wiki-content .md p { margin: 8px 0; }
+  .wiki-content .md ul { margin: 6px 0 6px 24px; }
+  .wiki-content .md table { border-collapse: collapse; width: 100%; font-size: 12.5px; margin: 12px 0; }
+  .wiki-content .md th, .wiki-content .md td { border: 1px solid var(--rule); padding: 5px 8px; text-align: left; }
+  .wiki-content .md th { background: var(--rule-soft); font-weight: 600; }
+  .wiki-content .md strong { color: var(--ink); font-weight: 600; }
+  .wiki-entry { display: inline-block; margin-top: 18px; padding: 10px 18px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.16); border-radius: 999px; color: var(--dark-text, #e6edf3); text-decoration: none; font-size: 14px; }
+</style>
+</head>
+<body>
+
+<section class="wiki-prepare" id="prepare-section">
+  <h1>📄 PDF Wiki</h1>
+  <div class="sub">输入 公司代码 + 年份 → 巨潮下载年报 PDF → markitdown 转 MD 沉淀 → 浏览</div>
+  <div class="wiki-form">
+    <input id="code" type="text" value="600519" placeholder="股票代码" inputmode="numeric" autocomplete="off">
+    <input id="year" type="text" value="2024" placeholder="年份" inputmode="numeric" autocomplete="off">
+    <button id="prepare-btn">沉淀 / 加载</button>
+  </div>
+  <div class="wiki-progress" id="progress">
+    <div class="steps">
+      <div class="step" data-step="download"><span class="step-icon">○</span><span class="step-name">下载 PDF</span><span class="step-detail"></span></div>
+      <div class="step" data-step="parse"><span class="step-icon">○</span><span class="step-name">解析 MD</span><span class="step-detail"></span></div>
+      <div class="step" data-step="section"><span class="step-icon">○</span><span class="step-name">切章节</span><span class="step-detail"></span></div>
+    </div>
+    <div class="progress-bar-wrap"><div class="progress-bar" id="dl-bar"></div></div>
+    <div class="progress-msg" id="progress-msg">输入代码点开始。首次约 1 分钟(下载+解析), 之后命中缓存秒回。</div>
+  </div>
+</section>
+
+<section class="wiki-list" id="wiki-list">
+  <h3>📚 已沉淀的 wiki（点击卡片进入明细）</h3>
+  <div class="wiki-cards" id="wiki-cards"></div>
+</section>
+
+<section class="wiki-view" id="wiki-view">
+  <div class="wiki-top-actions">
+    <button class="back-btn" id="back-to-list">← 返回列表</button>
+    <a href="/" class="back-btn">返回 MVP</a>
+  </div>
+  <aside class="wiki-sidebar" id="sidebar"></aside>
+  <main class="wiki-content">
+    <div class="doc-meta" id="doc-meta"></div>
+    <div class="md" id="md-content">加载中…</div>
+  </main>
+</section>
+
+<script src="/static/wiki.js?v=6"></script>
+</body>
+</html>

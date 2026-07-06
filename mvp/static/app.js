@@ -37,6 +37,7 @@ function start(code) {
   es.addEventListener('analysis_chunk', e => onAnalysisChunk(JSON.parse(e.data)));
   es.addEventListener('analysis_done', e => onAnalysisDone(JSON.parse(e.data)));
   es.addEventListener('fatal', e => onFatal(JSON.parse(e.data)));
+  es.addEventListener('deep_hint', e => onDeepHint(JSON.parse(e.data)));
   es.onerror = () => { if (finished && es) es.close(); };
 }
 
@@ -109,7 +110,7 @@ function onAnalysisDone(d) {
   if (body.dataset.md) body.innerHTML = renderMd(body.dataset.md);
   el.querySelector('.card-status').innerHTML = '✓ 分析完成';
   finished = true;
-  if (es) es.close();   // 防止 EventSource 在服务端关闭连接后自动重连, 导致整个流程重复
+  // 不立即 close es: deep_hint 事件紧随 analysis_done, 提前关闭会丢失它; 由 onDeepHint / onerror 关闭
 }
 
 function onFatal(d) {
@@ -121,8 +122,57 @@ function onFatal(d) {
   if (es) es.close();
 }
 
+function onDeepHint(d) {
+  const el = document.createElement('div');
+  el.className = 'card layer-deep deep-hint-card';
+  el.innerHTML = `
+    <div class="card-head">
+      <span class="layer-tag">深度</span>
+      <span class="card-title">深度排雷（读年报附注）</span>
+    </div>
+    <div class="card-body">
+      <div class="deep-hint-msg">初分完成。要深度排雷吗？读 <b>${esc(d.name || '')} ${esc(d.code)}</b> 的年报附注（关联交易 / 会计政策变更 / 审计措辞 / 商誉承诺 / 或有负债），约 2 分钟。${d.has_wiki ? '✅ ' + d.year + ' wiki 已沉淀, 秒过。' : '⏳ 首次需下载解析 PDF。'}</div>
+      <div class="deep-year-row">
+        <label>年份</label>
+        <input id="deep-year" type="text" value="${d.year}" inputmode="numeric" autocomplete="off">
+        <button class="deep-btn" id="deep-start-btn">📄 开始深度排雷</button>
+      </div>
+      <div class="deep-hint-tip">默认最新年（${d.year}）。测暴雷期可改：康美 2018、康得新 002450 2018、獐子岛 002069 等。</div>
+    </div>`;
+  $('cards').appendChild(el);
+  if (es) es.close();
+  el.querySelector('#deep-start-btn').addEventListener('click', () => {
+    const y = parseInt((el.querySelector('#deep-year').value || '').trim()) || d.year;
+    el.querySelector('.card-body').innerHTML = `<div class="deep-hint-msg">深度排雷（${esc(d.code)} ${y}）进行中, 见下方卡片 ↓</div>`;
+    startDeep(d.code, y);
+  });
+}
+
+let esDeep = null;
+function startDeep(code, year) {
+  if (esDeep) esDeep.close();
+  esDeep = new EventSource(`/api/agent/analyze?code=${encodeURIComponent(code)}&year=${encodeURIComponent(year)}`);
+  esDeep.addEventListener('card_start', e => onCardStart(JSON.parse(e.data)));
+  esDeep.addEventListener('card_data', e => onCardData(JSON.parse(e.data)));
+  esDeep.addEventListener('card_done', e => onCardDone(JSON.parse(e.data)));
+  esDeep.addEventListener('deep_progress', e => onDeepProgress(JSON.parse(e.data)));
+  esDeep.addEventListener('fatal', e => onFatal(JSON.parse(e.data)));
+  esDeep.onerror = () => { if (esDeep) esDeep.close(); };
+}
+
+function onDeepProgress(d) {
+  const el = cardEls[d.cardId];
+  if (!el) return;
+  const m = d.meta || {};
+  let txt = d.message || '';
+  if (d.stage === 'download_progress' && m.pct != null) txt = `下载 ${m.pct}% (${m.downloaded ? Math.round(m.downloaded/1024) : 0} KB)`;
+  else if (d.stage === 'step') txt = `[${m.step || ''}] ${d.message}`;
+  const body = el.querySelector('.card-body');
+  if (body) body.innerHTML = `<div class="deep-prog">${esc(txt)}</div>`;
+}
+
 function layerLabel(layer) {
-  return { data: '数据', rule: '规则', summary: '汇总', analysis: 'AI 分析' }[layer] || layer;
+  return { data: '数据', rule: '规则', summary: '汇总', analysis: 'AI 分析', deep: '深度' }[layer] || layer;
 }
 
 function renderBody(cardId, p) {
@@ -132,6 +182,9 @@ function renderBody(cardId, p) {
     case 'profit': return renderTable(p, ['year', 'operate_income', 'parent_netprofit']);
     case 'cashflow': return renderTable(p, ['year', 'netcash_operate']);
     case 'summary': return renderSummary(p);
+    case 'deep_result': return `<div class="deep-result">${esc(p.msg || '')}</div>`;
+    case 'deep_number': return renderDeepNumber(p);
+    case 'deep_notes': return renderDeepNotes(p);
     default:
       if (p && p.id) return renderRule(p);
       return '';
@@ -198,6 +251,40 @@ function renderSummary(p) {
     <div class="s"><span class="n nodata">${p.nodata}</span><span class="l">数据不可得</span></div>
     <div class="s"><span class="n" style="color:var(--ink)">${p.total}</span><span class="l">总规则</span></div>
   </div>`;
+}
+
+function renderDeepNumber(p) {
+  let h = '';
+  if (p.rule_results && p.rule_results.length) {
+    h += '<div class="deep-sub">📊 规则层（akshare, 同初分）</div>';
+    h += p.rule_results.map(r => {
+      const cls = r.hit === true ? 'hit' : '';
+      const flag = r.hit === true ? '🔴 命中' : (r.hit === null ? '⚫ 不可得' : '⚪ 未命中');
+      return `<div class="deep-row ${cls}"><span class="dr-name">${esc(r.title)}</span><span class="dr-flag">${flag}</span><span class="dr-sum">${esc(r.summary || '')}</span></div>`;
+    }).join('');
+  }
+  if (p.cross_diffs && p.cross_diffs.length) {
+    h += '<div class="deep-sub warn">⚠️ wiki vs akshare 交叉差异（>5%）</div>';
+    h += '<div style="font-size:11px;color:var(--ink-faint);margin-bottom:6px">wiki 数字提取为实验性(markitdown 表格解析), 差异可能是提取误差, 以 akshare 为准</div>';
+    h += p.cross_diffs.map(d => `<div class="deep-row cross">${esc(d['科目'] || '')}: akshare ${d.akshare_亿}亿 / wiki ${d.wiki_亿}亿（差 ${d.差异率}）</div>`).join('');
+  } else if (p.wiki_numbers && Object.keys(p.wiki_numbers).length) {
+    h += '<div class="deep-sub ok">✅ wiki 与 akshare 关键数字基本一致</div>';
+  }
+  return h || '<div class="deep-result">无数据</div>';
+}
+
+function renderDeepNotes(p) {
+  const fs = p.findings || [];
+  if (!fs.length) return '<div class="deep-result">无附注分析</div>';
+  return fs.map(f => {
+    const sev = f.severity || 'info';
+    const hitTxt = f.hit === true ? '🔴 命中' : (f.hit === false ? '⚪ 未命中' : (f.hit === 'unknown' ? '❓ 信息不足' : '⚫ 跳过'));
+    return `<div class="finding ${sev} ${f.hit === true ? 'hit' : ''}">
+      <div class="f-head"><span class="f-sev ${sev}">${sev}</span><b>${esc(f.title)}</b><span class="f-hit">${hitTxt}</span></div>
+      <div class="f-sum">${esc(f.summary || '')}</div>
+      ${f.evidence ? `<details class="f-ev"><summary>原文引用${f.section_ref ? ' · ' + esc(f.section_ref) : ''}</summary><pre>${esc(f.evidence)}</pre></details>` : ''}
+    </div>`;
+  }).join('');
 }
 
 function renderMd(md) {
